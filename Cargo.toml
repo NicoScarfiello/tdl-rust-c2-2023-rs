@@ -6,6 +6,12 @@ edition = "2021"
 [[bin]]
 name = "tdl-rust-c2-2023-rs"
 path = "main.rs"
+test = false
+
+[lib]
+path = "src/lib.rs"
+test = false
+doctest = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
