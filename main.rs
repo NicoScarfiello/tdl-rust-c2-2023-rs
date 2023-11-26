@@ -1,5 +1,5 @@
 use std::fs::{self};
-use std::io;
+use std::io::{self, Write};
 use tdl_rust_c2_2023_rs::core_app::core_app::CompressorAppState;
 
 thread_local! {
@@ -33,8 +33,21 @@ pub fn ask_for_file() -> Result<String, ()> {
     }
 }
 
+fn print_jobs() {
+    APP_STATE.with(|app_state| app_state.print_all_process())
+}
+
+#[allow(dead_code)]
+fn create_super_big_file() {
+    let mut file = fs::File::create("super_big_file.txt").unwrap();
+    for _ in 0..1000000 {
+        file.write_all(b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris. Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.").unwrap();
+    }
+}
+
 fn main() -> std::io::Result<()> {
-    let mut action = String::new();
+    // create_super_big_file();
+    let mut action: String = String::new();
     let mut stop: bool = false;
     while !stop {
         println!("Que desea hacer? (comprimir/descomprimir/salir)");
@@ -76,6 +89,7 @@ fn main() -> std::io::Result<()> {
                 let _ = &action.clear();
             }
         }
+        print_jobs();
     }
     Ok(())
 }
