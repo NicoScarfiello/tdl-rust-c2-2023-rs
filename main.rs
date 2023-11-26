@@ -1,60 +1,95 @@
-use std::fs::File;
-use std::io::{Read, Write};
-use std::env;
-use tdl_rust_c2_2023_rs::lzw::lzw::LzwCompressor;
+use std::fs::{self};
+use std::io::{self, Write};
+use tdl_rust_c2_2023_rs::core_app::core_app::CompressorAppState;
 
-fn agregar_extension(nombre: &str, extension: &str) -> String {
-    let mut parts: Vec<&str> = nombre.split('.').collect();
-    if parts.len() > 1 {
-        parts.pop();
+thread_local! {
+    static APP_STATE: CompressorAppState = CompressorAppState::default()
+}
+
+fn compress(input_file_path: &str) -> std::io::Result<()> {
+    APP_STATE.with(|app_state| app_state.compress(input_file_path))
+}
+
+fn decompress(input_file_path: &str) -> std::io::Result<()> {
+    APP_STATE.with(|app_state| app_state.decompress(input_file_path))
+}
+
+pub fn ask_for_file() -> Result<String, ()> {
+    loop {
+        println!("Ingrese el nombre del archivo");
+        let mut file_name = String::new();
+        io::stdin()
+            .read_line(&mut file_name)
+            .expect("Error al leer el nombre del archivo");
+        file_name = file_name.trim().to_string();
+        match fs::metadata(&file_name) {
+            Ok(_) => {
+                return Ok(file_name);
+            }
+            Err(_) => {
+                println!("El archivo no existe");
+            }
+        };
     }
-    parts.push(extension);
-    parts.join(".")
 }
 
-fn comprimir(input_file_path: &str) -> std::io::Result<()> {
-    let mut input_file = File::open(input_file_path)?;
-    let mut input_data = Vec::new();
-    input_file.read_to_end(&mut input_data)?;
-    let output_file_path = agregar_extension(input_file_path, "lzw");
-    let mut output_file = File::create(&output_file_path)?;
-    let mut output_buffer = Vec::new();  
-    let mut compressor = LzwCompressor::new();
-    compressor.compress(&input_data[..], &mut output_buffer)?;
-    output_file.write_all(&output_buffer)?;
-    println!("Archivo comprimido guardado como: {}", output_file_path);
-    Ok(())
+fn print_jobs() {
+    APP_STATE.with(|app_state| app_state.print_all_process())
 }
 
-fn descomprimir(input_file_path: &str) -> std::io::Result<()> {
-    let mut input_file = File::open(input_file_path)?;
-    let mut input_data = Vec::new();
-    input_file.read_to_end(&mut input_data)?;
-    let output_file_path = agregar_extension(input_file_path, "txt");
-    let mut output_file = File::create(&output_file_path)?;
-    let mut output_buffer = Vec::new();
-    let mut compressor = LzwCompressor::new();
-    compressor.decompress(&input_data[..], &mut output_buffer)?;
-    output_file.write_all(&output_buffer)?;
-    println!("Archivo descomprimido guardado como: {}", output_file_path);
-    Ok(())
+#[allow(dead_code)]
+fn create_super_big_file() {
+    let mut file = fs::File::create("super_big_file.txt").unwrap();
+    for _ in 0..1000000 {
+        file.write_all(b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris. Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.").unwrap();
+    }
 }
 
 fn main() -> std::io::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
-        println!("Uso: cargo run <comprimir/descomprimir> <archivo_entrada>");
-        return Ok(());
-    }
-    let accion = &args[1];
-    let archivo_entrada = &args[2];
-    match accion.as_str() {
-        "comprimir" => comprimir(archivo_entrada)?,
-        "descomprimir" => descomprimir(archivo_entrada)?,
-        _ => {
-            println!("Acción no reconocida. Use 'comprimir' o 'descomprimir'.");
-            return Ok(());
+    // create_super_big_file();
+    let mut action: String = String::new();
+    let mut stop: bool = false;
+    while !stop {
+        println!("Que desea hacer? (comprimir/descomprimir/salir)");
+        io::stdin()
+            .read_line(&mut action)
+            .expect("Failed to read line");
+        println!("Usted eligio: {}", action);
+        action = action.trim().to_string();
+        match action.as_str() {
+            "comprimir" => {
+                let file_name = ask_for_file();
+                match file_name {
+                    Ok(file_name) => {
+                        let _ = &action.clear();
+                        compress(&file_name)?
+                    }
+                    Err(_) => {
+                        let _ = &action.clear();
+                        println!("Error al leer el nombre del archivo")
+                    }
+                }
+            }
+            "descomprimir" => {
+                let file_name = ask_for_file();
+                match file_name {
+                    Ok(file_name) => {
+                        let _ = &action.clear();
+                        decompress(&file_name)?
+                    }
+                    Err(_) => {
+                        let _ = &action.clear();
+                        println!("Error al leer el nombre del archivo")
+                    }
+                }
+            }
+            "salir" => stop = true,
+            _ => {
+                println!("Opcion no reconocida");
+                let _ = &action.clear();
+            }
         }
-    };
+        print_jobs();
+    }
     Ok(())
 }
