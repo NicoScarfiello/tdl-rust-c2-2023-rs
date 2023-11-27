@@ -73,4 +73,21 @@ mod tests {
         assert_eq!(decompressed_data_2, original_data_2.as_bytes());
     }  
 
+    #[test]
+    pub fn test_lzw_compress_decompress_big_file_not_fails() {
+        let mut compressor = LzwCompressor::new();
+        let original_data = generate_large_string();
+        let mut compressed_data = Vec::new();
+        let mut decompressed_data = Vec::new();
+        compressor.compress(original_data.as_bytes(), &mut compressed_data).unwrap();
+        compressor.decompress(Cursor::new(&compressed_data), &mut decompressed_data).unwrap();
+        assert_ne!(compressed_data, original_data.as_bytes());
+        assert_eq!(decompressed_data, original_data.as_bytes());
+    }  
+
+    fn generate_large_string() -> String {
+        const REPEAT: usize = 1000000;
+        let small_string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris. Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.";
+        small_string.repeat(REPEAT)
+    }
 }
