@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 
 pub struct LzwCompressor {
-    dictionary: HashMap<Vec<u8>, u16>,
+    dictionary: HashMap<Vec<u8>, u128>,
 }
 
 impl LzwCompressor {
@@ -29,13 +29,13 @@ impl LzwCompressor {
         let mut input = input;
         let mut output = output;
         self.reset_dictionary();
-        let mut current_code = 256u16;
+        let mut current_code = 256u128;
         let mut current_sequence = Vec::new();
         while let Ok(byte) = input.read_u8() {
             current_sequence.push(byte);
 
             if !self.dictionary.contains_key(&current_sequence) {
-                match output.write_u16::<LittleEndian>(
+                match output.write_u128::<LittleEndian>(
                     *self
                         .dictionary
                         .get(&current_sequence[..current_sequence.len() - 1])
@@ -53,7 +53,7 @@ impl LzwCompressor {
             }
         }
 
-        output.write_u16::<LittleEndian>(*self.dictionary.get(&current_sequence).unwrap_or(&0))?;
+        output.write_u128::<LittleEndian>(*self.dictionary.get(&current_sequence).unwrap_or(&0))?;
         Ok(())
     }
 
@@ -61,17 +61,17 @@ impl LzwCompressor {
         let mut input = input;
         let mut output = output;
         self.reset_dictionary();
-        let mut inverse_dict: HashMap<u16, Vec<u8>> = self
+        let mut inverse_dict: HashMap<u128, Vec<u8>> = self
             .dictionary
             .iter()
             .map(|(key, value)| (*value, key.clone()))
             .collect();
     
-        let mut current_code = 256u16;
+        let mut current_code = 256u128;
         let mut previous_code = None;
         let mut previous_sequence = Vec::new();
     
-        while let Ok(code) = input.read_u16::<LittleEndian>() {
+        while let Ok(code) = input.read_u128::<LittleEndian>() {
             if code == 0 && previous_sequence.is_empty(){
                 continue;
             }
