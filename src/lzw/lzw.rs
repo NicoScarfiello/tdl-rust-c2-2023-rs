@@ -3,12 +3,14 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::collections::HashMap;
 use std::io::{Read, Write};
 
+use crate::core_app::traits::Compressor;
+
 pub struct LzwCompressor {
     dictionary: HashMap<Vec<u8>, u128>,
 }
 
-impl LzwCompressor {
-    pub fn new() -> Self {
+impl Compressor for LzwCompressor {
+    fn new() -> Self {
         let mut dictionary = HashMap::new();
 
         for i in 0..=255 {
@@ -18,14 +20,7 @@ impl LzwCompressor {
         LzwCompressor { dictionary }
     }
 
-    pub fn reset_dictionary(&mut self) {
-        self.dictionary.clear();
-        for i in 0..=255 {
-            self.dictionary.insert(vec![i as u8], i);
-        }
-    }
-
-    pub fn compress<R: Read, W: Write>(&mut self, input: R, output: W) -> std::io::Result<()> {
+    fn compress<R: Read, W: Write>(&mut self, input: R, output: W) -> std::io::Result<()> {
         let mut input = input;
         let mut output = output;
         self.reset_dictionary();
@@ -45,8 +40,7 @@ impl LzwCompressor {
                     Err(e) => return Err(e),
                 }
 
-                self.dictionary
-                    .insert(current_sequence.clone(), current_code);
+                self.dictionary.insert(current_sequence, current_code);
                 current_code += 1;
 
                 current_sequence = vec![byte];
@@ -57,7 +51,7 @@ impl LzwCompressor {
         Ok(())
     }
 
-    pub fn decompress<R: Read, W: Write>(&mut self, input: R, output: W) -> std::io::Result<()> {
+    fn decompress<R: Read, W: Write>(&mut self, input: R, output: W) -> std::io::Result<()> {
         let mut input = input;
         let mut output = output;
         self.reset_dictionary();
@@ -66,13 +60,13 @@ impl LzwCompressor {
             .iter()
             .map(|(key, value)| (*value, key.clone()))
             .collect();
-    
+
         let mut current_code = 256u128;
         let mut previous_code = None;
         let mut previous_sequence = Vec::new();
-    
+
         while let Ok(code) = input.read_u128::<LittleEndian>() {
-            if code == 0 && previous_sequence.is_empty(){
+            if code == 0 && previous_sequence.is_empty() {
                 continue;
             }
             let sequence = match inverse_dict.get(&code) {
@@ -89,22 +83,31 @@ impl LzwCompressor {
                     s
                 }
             };
-    
+
             for byte in &sequence {
                 output.write_u8(*byte)?;
             }
-    
+
             if let Some(previous_code) = previous_code {
                 let mut new_sequence = inverse_dict.get(&previous_code).unwrap().clone();
                 new_sequence.push(sequence[0]);
                 inverse_dict.insert(current_code, new_sequence.clone());
                 current_code += 1;
             }
-    
+
             previous_code = Some(code);
             previous_sequence = sequence;
         }
-    
+
         Ok(())
+    }
+}
+
+impl LzwCompressor {
+    fn reset_dictionary(&mut self) {
+        self.dictionary.clear();
+        for i in 0..=255 {
+            self.dictionary.insert(vec![i as u8], i);
+        }
     }
 }

@@ -6,7 +6,7 @@ use std::{
     thread::{self, ThreadId},
 };
 
-use crate::{lzw::lzw::LzwCompressor, utils::files::add_extension};
+use crate::{core_app::traits::Compressor, lzw::lzw::LzwCompressor, utils::files::add_extension};
 
 #[derive(Default)]
 pub struct CompressorAppState {
