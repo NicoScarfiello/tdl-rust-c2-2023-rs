@@ -40,8 +40,7 @@ impl Compressor for LzwCompressor {
                     Err(e) => return Err(e),
                 }
 
-                self.dictionary
-                    .insert(current_sequence.clone(), current_code);
+                self.dictionary.insert(current_sequence, current_code);
                 current_code += 1;
 
                 current_sequence = vec![byte];
