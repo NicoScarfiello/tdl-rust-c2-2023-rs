@@ -1,5 +1,6 @@
 use std::fs::{self};
 use std::io::{self};
+use std::panic;
 use tdl_rust_c2_2023_rs::core_app::core_app::CompressorAppState;
 
 thread_local! {
@@ -36,7 +37,6 @@ pub fn ask_for_file() -> Result<String, ()> {
 fn print_jobs() {
     APP_STATE.with(|app_state| app_state.print_all_process())
 }
-
 
 fn main() -> std::io::Result<()> {
     let mut action: String = String::new();
@@ -77,11 +77,14 @@ fn main() -> std::io::Result<()> {
             }
             "salir" => stop = true,
             _ => {
-                println!("Opcion no reconocida");
-                let _ = &action.clear();
+                // println!("Opcion no reconocida");
+                panic!("Opcion no reconocida");
+                // // comentar en el video porque esta linea no sera nunca ejecutada.
+                // let _ = &action.clear();
             }
         }
         print_jobs();
     }
+
     Ok(())
 }
