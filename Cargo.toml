@@ -8,6 +8,11 @@ name = "tdl-rust-c2-2023-rs"
 path = "main.rs"
 test = false
 
+[[bin]]
+name = "lifetimes"
+path = "main_lifetimes.rs"
+test = false
+
 [lib]
 path = "src/lib.rs"
 test = false
