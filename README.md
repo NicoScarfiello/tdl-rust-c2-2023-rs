@@ -38,6 +38,6 @@ o ejecutar los test:
 cargo test
 ```
 
-Bibliografía
-The Rust Programming Language - The Rust Programming Language. (n.d.). [https://doc.rust-lang.org/book/](https://doc.rust-lang.org/book/)
-N. A. R. S. (2023, December 17). Rust - Grupo RS - Teoría del lenguaje. YouTube. [https://youtu.be/WcrRN5VfwUs](https://youtu.be/WcrRN5VfwUs)
+## Bibliografía
+- The Rust Programming Language - The Rust Programming Language. [https://doc.rust-lang.org/book/](https://doc.rust-lang.org/book/)
+- Rust - Grupo RS - Teoría del lenguaje. YouTube. [https://youtu.be/WcrRN5VfwUs](https://youtu.be/WcrRN5VfwUs)
